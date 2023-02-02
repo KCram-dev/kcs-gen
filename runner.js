@@ -95,6 +95,7 @@ function create(path, name){
         fs.cpSync('./assets/logo512.png', join(path, public, 'logo512.png'));
         fs.cpSync('./assets/index.html', join(path, public, 'index.html'));
         fs.cpSync('./assets/robots.txt', join(path, public, 'robots.txt'));
+        fs.cpSync('./assets/.gitignore', join(path, public, '.gitignore'));
         log('Creando el manifest');
         fs.writeFileSync(join(path, public, 'manifest.json'), JSON.stringify(manifest, null, 2));
         log('Creando el package.json');
@@ -104,11 +105,9 @@ function create(path, name){
         log('Creando el componente App');
         fs.cpSync('./assets/App.js', join(path, componentApp, 'App.js'));
         fs.cpSync('./assets/App.css', join(path, componentApp, 'App.css'));
-
-
     }catch(error){
         log(error)
     }
 }
 
-create("./", "test2");
+module.exports = create;
