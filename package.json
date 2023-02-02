@@ -1,0 +1,27 @@
+{
+  "name": "react-gen",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "init": "npm i -g pkg",
+    "build": "pkg --compress GZip --no-bytecode --public-packages \"*\" --public ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "mk-simple-logger": "^0.1.11"
+  },
+  "bin": {
+    "react-gen": "main.js"
+  },
+  "pkg": {
+    "targets": [
+      "node16-windows",
+      "node16-linux",
+      "node16-macos"
+    ],
+    "outputPath": "prod"
+  }
+}
