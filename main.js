@@ -23,5 +23,5 @@ if( args.length > 1 ){
 
 const name = args[0];
 const path = process.cwd();
-// console.log(process.env);
+// console.log(__dirname);
 run(path, name)

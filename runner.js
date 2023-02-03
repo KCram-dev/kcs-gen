@@ -1,8 +1,10 @@
 const fs = require('fs');
+const os = require('os');
 const {exec} = require('node:child_process');
 const{join} = require('path');
 const {SimpleLogger} = require('mk-simple-logger');
 const cliSpinners = require('cli-spinners');
+const { execSync } = require('child_process');
 
 
 SimpleLogger.setLogLevel('debug');
@@ -72,6 +74,30 @@ const manifest = {
       ]
     }
   }
+const ignore = `# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# production
+/build
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+`;
   
 async function delay(time) {
   return new Promise(r=> {
@@ -97,24 +123,25 @@ async function create(path, name){
         fs.mkdirSync(join(path, src));
         fs.mkdirSync(join(path, component));
         fs.mkdirSync(join(path, public));
-        fs.cpSync( join(process.env.OLDPWD,'/assets/logo192.png'), join(path, public, 'logo192.png'));
-        fs.cpSync(join(process.env.OLDPWD,'/assets/logo64.png'), join(path, public, 'logo64.png'));
-        fs.cpSync( join(process.env.OLDPWD,'/assets/logo512.png'), join(path, public, 'logo512.png'));
-        fs.cpSync( join(process.env.OLDPWD,'/assets/index.html'), join(path, public, 'index.html'));
-        fs.cpSync( join(process.env.OLDPWD,'/assets/robots.txt'), join(path, public, 'robots.txt'));
-        fs.cpSync( join(process.env.OLDPWD,'/assets/.gitignore'), join(path, public, '.gitignore'));
+        fs.cpSync( join(__dirname,'/assets/logo192.png'), join(path, public, 'logo192.png'));
+        fs.cpSync(join(__dirname,'/assets/logo64.png'), join(path, public, 'logo64.png'));
+        fs.cpSync( join(__dirname,'/assets/logo512.png'), join(path, public, 'logo512.png'));
+        fs.cpSync( join(__dirname,'/assets/index.html'), join(path, public, 'index.html'));
+        fs.cpSync( join(__dirname,'/assets/robots.txt'), join(path, public, 'robots.txt'));
+        fs.cpSync( join(__dirname,'/assets/.gitignore'), join(path, name, '.gitignore'));
         await delay(1000);
         spiner2.text = "Creando archivos";
         fs.writeFileSync(join(path, public, 'manifest.json'), JSON.stringify(manifest, null, 2));
         fs.writeFileSync(join(path, name, 'package.json'), JSON.stringify(package, null, 2));
-        fs.cpSync(join(process.env.OLDPWD,'/assets/index.js'), join(path, src, 'index.js'));
-        fs.cpSync(join(process.env.OLDPWD,'/assets/reportWebVitals.js'), join(path, src, 'reportWebVitals.js'));
-        fs.cpSync(join(process.env.OLDPWD,'/assets/App.js'), join(path, componentApp, 'App.js'));
-        fs.cpSync(join(process.env.OLDPWD,'/assets/App.css'), join(path, componentApp, 'App.css'));
-        await delay(500);
+        fs.cpSync(join(__dirname,'/assets/index.js'), join(path, src, 'index.js'));
+        fs.cpSync(join(__dirname,'/assets/reportWebVitals.js'), join(path, src, 'reportWebVitals.js'));
+        fs.cpSync(join(__dirname,'/assets/App.js'), join(path, componentApp, 'App.js'));
+        fs.cpSync(join(__dirname,'/assets/App.css'), join(path, componentApp, 'App.css'));
+        await delay(1500);
         spiner2.succeed('Archivos creados');
     }catch(error){
         spiner2.fail("La carpeta ya existe");
+        log(error);
         process.exit(0xf001);
     }
     try{
@@ -148,6 +175,12 @@ async function create(path, name){
         console.log(e);
       }).on('close', (e)=>{
         spiner.succeed('Instaladas dependencias');
+        try{
+        execSync('git add .gitignore src public package.json package-lock.json')
+        execSync('git commit -m "ci: project init"');
+        }catch(e){
+          console.error('Error al hacer el commit');
+        }
       });
       
     }catch(err){
