@@ -1,7 +1,9 @@
-const os = require('os');
 const fs = require('fs');
+const {exec} = require('node:child_process');
 const{join} = require('path');
 const {SimpleLogger} = require('mk-simple-logger');
+const cliSpinners = require('cli-spinners');
+
 
 SimpleLogger.setLogLevel('debug');
 const log = console.log;
@@ -71,8 +73,12 @@ const manifest = {
     }
   }
   
-
-function create(path, name){
+async function delay(time) {
+  return new Promise(r=> {
+    setTimeout(r, time);
+  })
+}
+async function create(path, name){
     // create main folder
     const src = name+"/src";
     const component = name + "/src/components";
@@ -80,34 +86,76 @@ function create(path, name){
     const componentApp = component + '/app';
     manifest.short_name = name;
     package.name = name;
+    const ora = await import('ora');
+    const spiner2 = ora.default({
+      text: 'Copaindo archivos',
+      spinner: cliSpinners.timeTravel
+    });
     try{
-        log('Creando la carpeta del proyecto:', join(path, name));
+      spiner2.start();
         fs.mkdirSync(join(path, name));
-        log('Creando la carpeta de SRC:', join(path, src));
         fs.mkdirSync(join(path, src));
-        log('Creando la carpeta de componentes:', join(path, component));
         fs.mkdirSync(join(path, component));
-        log('Creando la carpeta public:', join(path, public));
         fs.mkdirSync(join(path, public));
-        log('Copiando archivos a public')
-        fs.cpSync('./assets/logo192.png', join(path, public, 'logo192.png'));
-        fs.cpSync('./assets/logo64.png', join(path, public, 'logo64.png'));
-        fs.cpSync('./assets/logo512.png', join(path, public, 'logo512.png'));
-        fs.cpSync('./assets/index.html', join(path, public, 'index.html'));
-        fs.cpSync('./assets/robots.txt', join(path, public, 'robots.txt'));
-        fs.cpSync('./assets/.gitignore', join(path, public, '.gitignore'));
-        log('Creando el manifest');
+        fs.cpSync( join(process.env.OLDPWD,'/assets/logo192.png'), join(path, public, 'logo192.png'));
+        fs.cpSync(join(process.env.OLDPWD,'/assets/logo64.png'), join(path, public, 'logo64.png'));
+        fs.cpSync( join(process.env.OLDPWD,'/assets/logo512.png'), join(path, public, 'logo512.png'));
+        fs.cpSync( join(process.env.OLDPWD,'/assets/index.html'), join(path, public, 'index.html'));
+        fs.cpSync( join(process.env.OLDPWD,'/assets/robots.txt'), join(path, public, 'robots.txt'));
+        fs.cpSync( join(process.env.OLDPWD,'/assets/.gitignore'), join(path, public, '.gitignore'));
+        await delay(1000);
+        spiner2.text = "Creando archivos";
         fs.writeFileSync(join(path, public, 'manifest.json'), JSON.stringify(manifest, null, 2));
-        log('Creando el package.json');
         fs.writeFileSync(join(path, name, 'package.json'), JSON.stringify(package, null, 2));
-        fs.cpSync('./assets/index.js', join(path, src, 'index.js'));
-        fs.cpSync('./assets/reportWebVitals.js', join(path, src, 'reportWebVitals.js'));
-        log('Creando el componente App');
-        fs.cpSync('./assets/App.js', join(path, componentApp, 'App.js'));
-        fs.cpSync('./assets/App.css', join(path, componentApp, 'App.css'));
+        fs.cpSync(join(process.env.OLDPWD,'/assets/index.js'), join(path, src, 'index.js'));
+        fs.cpSync(join(process.env.OLDPWD,'/assets/reportWebVitals.js'), join(path, src, 'reportWebVitals.js'));
+        fs.cpSync(join(process.env.OLDPWD,'/assets/App.js'), join(path, componentApp, 'App.js'));
+        fs.cpSync(join(process.env.OLDPWD,'/assets/App.css'), join(path, componentApp, 'App.css'));
+        await delay(500);
+        spiner2.succeed('Archivos creados');
     }catch(error){
-        log(error)
+        spiner2.fail("La carpeta ya existe");
+        process.exit(0xf001);
     }
+    try{
+      process.chdir(join(path, name));
+      const ora = await import('ora');
+      const spinner = ora.default({
+        text: 'Iniciando repositiorio',
+        spinner: cliSpinners.timeTravel
+      });
+      spinner.start();
+      await delay(3000);
+      exec('git init').on('close', (e)=>{
+        spinner.succeed('Repositorio creado');
+      });
+      
+    }catch(err){
+      console.error('No se ha podido iniciar el repositorio');
+      process.exit(0xf002);
+    }
+    await delay(100);
+    try{
+      process.chdir(join(path, name));
+      const ora = await import('ora');
+      const spiner = ora.default({
+        text: 'Instalando dependencias',
+        spinner: cliSpinners.timeTravel
+      });
+      spiner.start();
+      exec('npm i').on('error', (e) =>{
+        spiner.fail('Error al instalar las dependencias');
+        console.log(e);
+      }).on('close', (e)=>{
+        spiner.succeed('Instaladas dependencias');
+      });
+      
+    }catch(err){
+      console.error('No se ha podido instalar las dependecias');
+      process.exit(0xf002);
+    }
+
+    
 }
 
 module.exports = create;

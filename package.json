@@ -11,7 +11,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "mk-simple-logger": "^0.1.11"
+    "cli-spinners": "^2.7.0",
+    "mk-simple-logger": "^0.1.11",
+    "ora": "^6.1.2"
   },
   "bin": {
     "react-gen": "main.js"

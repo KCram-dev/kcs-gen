@@ -1,3 +1,4 @@
+const run = require('./runner');
 const args = process.argv.splice(2);
 const help = `
 react-gen <app_name>
@@ -7,7 +8,7 @@ Opciones:
 -h     mostrar esta ayuda
 
 ------------------------------------------------------------
-copy Kcram Solutions
+Kcram Solutions © 2023
  `;
  
 if( args[0] === '-h' || args[0] === '--help'){
@@ -19,3 +20,8 @@ if( args.length > 1 ){
     console.log(help);
     process.exit(0)
 }
+
+const name = args[0];
+const path = process.cwd();
+// console.log(process.env);
+run(path, name)
